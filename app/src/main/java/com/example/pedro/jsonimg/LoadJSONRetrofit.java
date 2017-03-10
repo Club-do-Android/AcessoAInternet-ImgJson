@@ -17,6 +17,8 @@ import org.w3c.dom.Text;
 import java.util.List;
 import java.util.logging.Logger;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -24,17 +26,23 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class LoadJSONRetrofit extends AppCompatActivity {
-    private TextView tvRetrofit;
-    private EditText etIdPost;
-    private Button btListar;
+
+    @BindView(R.id.tvRetrofit)
+    TextView tvRetrofit;
+
+    @BindView(R.id.etIdPost)
+    EditText etIdPost;
+
+    @BindView(R.id.btListar)
+    Button btListar;
+
+    private String uri = "https://jsonplaceholder.typicode.com/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_load_jsonretrofit);
-
-        etIdPost = (EditText) findViewById(R.id.etIdPost);
-        btListar = (Button) findViewById(R.id.btListar);
+        ButterKnife.bind(this);
 
         btListar.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -42,15 +50,23 @@ public class LoadJSONRetrofit extends AppCompatActivity {
                 if(etIdPost.getText().toString().equals("")){
                     getAllPosts();
                 }else {
-                    getPost(Integer.parseInt(etIdPost.getText().toString()));
+                    int postid = -1;
+                    try{
+                        postid = Integer.parseInt(etIdPost.getText().toString());
+                    }catch (NumberFormatException e){
+                        tvRetrofit.setText("Buscar apenas por números inteiros =}");
+                        etIdPost.setText("");
+                    }
+
+                    if(postid != -1)
+                        getPost(postid);
                 }
             }
         });
     }
 
     public void getPost(final int id){
-        tvRetrofit = (TextView) findViewById(R.id.tvRetrofit);
-        Retrofit retrofit = buildRetrofit();
+        Retrofit retrofit = buildRetrofit(uri);
 
         RetrofitInterface apiPosts = retrofit.create(RetrofitInterface.class);
         Call<Post> call = apiPosts.getPost(id);
@@ -75,8 +91,7 @@ public class LoadJSONRetrofit extends AppCompatActivity {
     }
 
     public void getAllPosts(){
-        tvRetrofit = (TextView) findViewById(R.id.tvRetrofit);
-        Retrofit retrofit = buildRetrofit();
+        Retrofit retrofit = buildRetrofit(uri);
 
         RetrofitInterface apiPosts = retrofit.create(RetrofitInterface.class);
         Call<List<Post>> call = apiPosts.getAllPosts();
@@ -100,9 +115,9 @@ public class LoadJSONRetrofit extends AppCompatActivity {
         });
     }
 
-    public Retrofit buildRetrofit(){
+    public Retrofit buildRetrofit(String uri){
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://jsonplaceholder.typicode.com/")
+                .baseUrl(uri)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         return retrofit;
